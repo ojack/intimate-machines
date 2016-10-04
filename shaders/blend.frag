@@ -25,7 +25,7 @@ void main() {
     float len = vignette(screenPosition, 0.2, 0.65);
     color.rgb = mix(color.rgb, color.rgb*0.85, len);
 
-    gl_FragColor.rgba = texture2D(u_image0, vec2(u_mouse.x, screenPosition.y));
+    gl_FragColor.rgba = texture2D(colorBuffer, vec2(u_mouse.x, screenPosition.y));
     gl_FragColor.a = 1.0;
 
    // gl_FragColor = vec4(u_mouse, 1.0, 1.0);

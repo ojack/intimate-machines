@@ -10,7 +10,7 @@ var Cam = require('./camera.js');
 function create(opt) {
     var cam = new Cam();
     //grab a test image, rotate it upright
-    var texture = require('baboon-image').transpose(1, 0, 2)
+   // var texture = require('baboon-image').transpose(1, 0, 2)
 
     //default options to texture size
     opt = xtend({
@@ -23,8 +23,8 @@ function create(opt) {
     var gl = require('webgl-context')(opt);
     console.log("boo context", gl);
     //create a WebGL texture from our image
-    var tex1 = Texture(gl, texture);
-    var tex2 = Texture(gl, cam.video);
+   // var tex1 = Texture(gl, texture);
+    var tex = Texture(gl, cam.video);
     //create the shader
    var shader = opt.shader(gl);
 
@@ -32,10 +32,10 @@ function create(opt) {
     console.log(shader);
    // var shader = createShader(gl, opt.shader);
 
-   var u_image0Location = gl.getUniformLocation(shader.handle, "colorBuffer");
-    var u_image1Location = gl.getUniformLocation(shader.handle, "u_image0");
-    gl.uniform1i(u_image0Location, 0);
-    gl.uniform1i(u_image1Location, 1);
+ //  var u_image0Location = gl.getUniformLocation(shader.handle, "colorBuffer");
+   // var u_image1Location = gl.getUniformLocation(shader.handle, "u_image0");
+ //   gl.uniform1i(u_image0Location, 0);
+   // gl.uniform1i(u_image1Location, 1);
     //draw the scene initially
    // render()
     
@@ -54,7 +54,7 @@ function create(opt) {
 
     function render(mouse) {
         cam.update();
-         var tex2 = Texture(gl, cam.canvas);
+         var tex = Texture(gl, cam.canvas);
         
         //clear screen & setup viewport
         gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight)
@@ -65,9 +65,10 @@ function create(opt) {
         shader.bind();
        // console.log(mouse);
         shader.uniforms.u_mouse = [mouse[0]/window.innerWidth, mouse[1]/window.innerHeight];
-        shader.uniforms.colorBuffer = 0;
-        tex1.bind(0);
-       tex2.bind(1);
+       // shader.uniforms.colorBuffer = 0;
+     //   tex1.bind(0);
+      // tex2.bind(1);
+      tex.bind();
         triangle(gl)
     }
 }
