@@ -200,7 +200,7 @@ module.exports = Physics;
 
 var Windows = function() {
     this.browser = new Image();
-    this.browser.src = './images/chrome.png';
+    this.browser.src = './images/chrome-shadow.png';
 
     this.canvas = document.createElement('canvas');
    this.canvas.width = window.innerWidth;
@@ -300,10 +300,10 @@ var Follow = require("./FollowMe.js");
 raf.polyfill();
 var follow;
 var currStep = 0;
-var stepAmounts = [300, 500, 400, 500, 600, 400, 600];
+var stepAmounts = [300, 400, 400, 300, 600, 2000, 600, 500];
 var mouseCount = 0;
 var glslify = require("glslify");
-var createShader = require("glslify/adapter.js")("\n#define GLSLIFY 1\n\nprecision mediump float;\nattribute vec2 position;\nvarying vec2 screenPosition;\nvoid main() {\n  screenPosition = (position + 1.0) * 0.5;\n  screenPosition.y = 1.0 - screenPosition.y;\n  gl_Position = vec4(position, 1.0, 1.0);\n}", "\n#define GLSLIFY 1\n\nprecision mediump float;\nuniform sampler2D colorBuffer;\nuniform sampler2D u_image0;\nuniform vec2 u_mouse;\nuniform float glitchCount;\nuniform float u_time;\nuniform int stage;\nvarying vec2 screenPosition;\nfloat a_x_luma(vec3 color) {\n  return dot(color, vec3(0.299, 0.587, 0.114));\n}\nfloat a_x_luma(vec4 color) {\n  return dot(color.rgb, vec3(0.299, 0.587, 0.114));\n}\nfloat b_x_rlength(vec2 v) {\n  v = abs(v);\n  if(v.x > v.y)\n    return v.x * sqrt(1.0 + (v.y / v.x) * (v.y / v.x));\n  else\n    return v.y * sqrt(1.0 + (v.x / v.y) * (v.x / v.y));\n  \n}\nfloat b_x_GetRoot(float r0, float z0, float z1, float g) {\n  float n0 = r0 * z0;\n  float s0 = z1 - 1.0;\n  float s1 = (g < 0.0) ? 0.0 : b_x_rlength(vec2(n0, z1)) - 1.0;\n  float s = 0.0;\n  for(int i = 0; i < 64; i++) {\n    s = 0.5 * (s0 + s1);\n    vec2 ratio = vec2(n0 / (s + r0), z1 / (s + 1.0));\n    g = dot(ratio, ratio) - 1.0;\n    if(g > 0.0)\n      s0 = s;\n    else\n      s1 = s;\n    \n  }\n  return s;\n}\nfloat b_x_sdEllipse(vec2 p, vec2 e) {\n  p = abs(p);\n  float dis = 0.0;\n  vec2 z = p / e;\n  float g = dot(z, z) - 1.0;{\n    float r0 = (e.x / e.y) * (e.x / e.y);\n    float sbar = b_x_GetRoot(r0, z.x, z.y, g);\n    vec2 r = p * vec2(r0 / (sbar + r0), 1.0 / (sbar + 1.0));\n    dis = length(p - r) * sign(p.y - r.y);\n  }\n  return dis;\n}\nfloat b_x_ellipse(vec2 uv, float w, float h) {\n  uv = vec2(uv.y, uv.x);\n  float d = b_x_sdEllipse(uv, vec2(0.3, 0.3) + vec2(w, h));\n  return d;\n}\nfloat c_x_vignette(vec2 uv, float a, float b) {\n  float len = length(uv - 0.5);\n  return smoothstep(a, b, len);\n}\nfloat c_x_character(float n, vec2 p) {\n  p = floor(p * vec2(4.0, -4.0) + 2.5);\n  if(clamp(p.x, 0.0, 4.0) == p.x && clamp(p.y, 0.0, 4.0) == p.y) {\n    if(int(mod(n / exp2(p.x + 5.0 * p.y), 2.0)) == 1)\n      return 1.0;\n    \n  }\n  return 0.0;\n}\nfloat c_x_asciiFilter(vec3 color, vec2 uv, float pixelSize) {\n  float threshold = a_x_luma(color);\n  float n = 65536.0;\n  if(threshold > 0.2)\n    n = 65600.0;\n  if(threshold > 0.3)\n    n = 332772.0;\n  if(threshold > 0.4)\n    n = 15255086.0;\n  if(threshold > 0.5)\n    n = 23385164.0;\n  if(threshold > 0.6)\n    n = 15252014.0;\n  if(threshold > 0.7)\n    n = 13199452.0;\n  if(threshold > 0.8)\n    n = 11512810.0;\n  vec2 p = mod(uv / (pixelSize * 0.5), 2.0) - vec2(1.0);\n  return c_x_character(n, p);\n}\nfloat c_x_asciiFilter(vec3 color, vec2 uv) {\n  return c_x_asciiFilter(color, uv, 1.0 / 25.0);\n}\nfloat e_x_vignette(vec2 uv, float a, float b) {\n  float len = length(uv - 0.5);\n  return smoothstep(a, b, len);\n}\nvoid main() {\n  if(stage == 0) {\n    vec2 center = (screenPosition - 0.5) * 2.0;\n    float e = b_x_ellipse(center, 0.6, 0.02);\n    vec4 cam = texture2D(colorBuffer, vec2(u_mouse.x, screenPosition.y));\n    gl_FragColor.rgb = mix(cam.rgb, vec3(1.0), e);\n    gl_FragColor.a = 1.0;\n  } else if(stage == 1) {\n    vec2 pos = screenPosition;\n    pos.x += 0.5 * sin(floor(pos.y * min(u_time / 100.0, 80.0)) * sin(u_time * 0.001)) + abs(u_mouse.x - 0.5);\n    pos.y += 0.2 * sin(floor(pos.x * min(u_time / 100.0, 80.0)) * cos(u_time * 0.001 + 0.4)) + abs(u_mouse.y - 0.5);\n    vec4 col = texture2D(u_image0, fract(pos));\n    vec4 cam = texture2D(colorBuffer, fract(1.0 - pos));\n    gl_FragColor = 2.0 * (cam - col);\n    gl_FragColor.a = 1.0;\n  } else {\n    vec2 center = (screenPosition - 0.5) * 2.0;\n    float e = b_x_ellipse(center, 0.9, 0.00);\n    float mag = 0.3 + e * u_mouse.x * 10.0;\n    vec2 s = vec2(screenPosition.y * mag + (1.0 - mag) / 2.0, 0.6 + abs(screenPosition.x - 0.5));\n    vec4 cam = texture2D(colorBuffer, s);\n    float a = c_x_asciiFilter(cam.rgb, screenPosition, (1.0 + e * 0.2) / 100.0);\n    gl_FragColor.rgb = mix(cam.rgb, vec3(1.0 - a), smoothstep(-1.08 + u_time * 0.01, 0.08 + u_time * 0.0008, e));\n    gl_FragColor.a = 1.0;\n  }\n  \n}", [{"name":"colorBuffer","type":"sampler2D"},{"name":"u_image0","type":"sampler2D"},{"name":"u_mouse","type":"vec2"},{"name":"glitchCount","type":"float"},{"name":"u_time","type":"float"},{"name":"stage","type":"int"}], [{"name":"position","type":"vec2"}]);
+var createShader = require("glslify/adapter.js")("\n#define GLSLIFY 1\n\nprecision mediump float;\nattribute vec2 position;\nvarying vec2 screenPosition;\nvoid main() {\n  screenPosition = (position + 1.0) * 0.5;\n  screenPosition.y = 1.0 - screenPosition.y;\n  gl_Position = vec4(position, 1.0, 1.0);\n}", "\n#define GLSLIFY 1\n\nprecision mediump float;\nuniform sampler2D colorBuffer;\nuniform sampler2D u_image0;\nuniform vec2 u_mouse;\nuniform float glitchCount;\nuniform float u_time;\nuniform int stage;\nvarying vec2 screenPosition;\nfloat a_x_luma(vec3 color) {\n  return dot(color, vec3(0.299, 0.587, 0.114));\n}\nfloat a_x_luma(vec4 color) {\n  return dot(color.rgb, vec3(0.299, 0.587, 0.114));\n}\nfloat b_x_rlength(vec2 v) {\n  v = abs(v);\n  if(v.x > v.y)\n    return v.x * sqrt(1.0 + (v.y / v.x) * (v.y / v.x));\n  else\n    return v.y * sqrt(1.0 + (v.x / v.y) * (v.x / v.y));\n  \n}\nfloat b_x_GetRoot(float r0, float z0, float z1, float g) {\n  float n0 = r0 * z0;\n  float s0 = z1 - 1.0;\n  float s1 = (g < 0.0) ? 0.0 : b_x_rlength(vec2(n0, z1)) - 1.0;\n  float s = 0.0;\n  for(int i = 0; i < 64; i++) {\n    s = 0.5 * (s0 + s1);\n    vec2 ratio = vec2(n0 / (s + r0), z1 / (s + 1.0));\n    g = dot(ratio, ratio) - 1.0;\n    if(g > 0.0)\n      s0 = s;\n    else\n      s1 = s;\n    \n  }\n  return s;\n}\nfloat b_x_sdEllipse(vec2 p, vec2 e) {\n  p = abs(p);\n  float dis = 0.0;\n  vec2 z = p / e;\n  float g = dot(z, z) - 1.0;{\n    float r0 = (e.x / e.y) * (e.x / e.y);\n    float sbar = b_x_GetRoot(r0, z.x, z.y, g);\n    vec2 r = p * vec2(r0 / (sbar + r0), 1.0 / (sbar + 1.0));\n    dis = length(p - r) * sign(p.y - r.y);\n  }\n  return dis;\n}\nfloat b_x_ellipse(vec2 uv, float w, float h) {\n  uv = vec2(uv.y, uv.x);\n  float d = b_x_sdEllipse(uv, vec2(0.3, 0.3) + vec2(w, h));\n  return d;\n}\nfloat c_x_vignette(vec2 uv, float a, float b) {\n  float len = length(uv - 0.5);\n  return smoothstep(a, b, len);\n}\nfloat c_x_character(float n, vec2 p) {\n  p = floor(p * vec2(4.0, -4.0) + 2.5);\n  if(clamp(p.x, 0.0, 4.0) == p.x && clamp(p.y, 0.0, 4.0) == p.y) {\n    if(int(mod(n / exp2(p.x + 5.0 * p.y), 2.0)) == 1)\n      return 1.0;\n    \n  }\n  return 0.0;\n}\nfloat c_x_asciiFilter(vec3 color, vec2 uv, float pixelSize) {\n  float threshold = a_x_luma(color);\n  float n = 65536.0;\n  if(threshold > 0.2)\n    n = 65600.0;\n  if(threshold > 0.3)\n    n = 332772.0;\n  if(threshold > 0.4)\n    n = 15255086.0;\n  if(threshold > 0.5)\n    n = 23385164.0;\n  if(threshold > 0.6)\n    n = 15252014.0;\n  if(threshold > 0.7)\n    n = 13199452.0;\n  if(threshold > 0.8)\n    n = 11512810.0;\n  vec2 p = mod(uv / (pixelSize * 0.5), 2.0) - vec2(1.0);\n  return c_x_character(n, p);\n}\nfloat c_x_asciiFilter(vec3 color, vec2 uv) {\n  return c_x_asciiFilter(color, uv, 1.0 / 25.0);\n}\nfloat e_x_vignette(vec2 uv, float a, float b) {\n  float len = length(uv - 0.5);\n  return smoothstep(a, b, len);\n}\nvoid main() {\n  if(stage == 0) {\n    vec4 cam = texture2D(colorBuffer, vec2(u_mouse.x, screenPosition.y));\n    gl_FragColor.rgb = cam.rgb;\n    gl_FragColor.a = 1.0;\n  } else if(stage == 1 || stage == 3 || stage == 4) {\n    vec2 center = (screenPosition - 0.5) * 2.0;\n    float e = b_x_ellipse(center, 0.6, 0.02);\n    vec4 cam = texture2D(colorBuffer, vec2(u_mouse.x, screenPosition.y));\n    gl_FragColor.rgb = mix(cam.rgb, vec3(1.0), e);\n    gl_FragColor.a = 1.0;\n  } else if(stage == 2) {\n    vec4 cam = texture2D(colorBuffer, vec2(u_mouse.x, u_mouse.y));\n    gl_FragColor.rgb = cam.rgb;\n    gl_FragColor.a = 1.0;\n  } else if(stage == 5) {\n    vec2 pos = screenPosition;\n    pos.x += 0.5 * sin(floor(pos.y * min(u_time / 100.0, 80.0)) * sin(u_time * 0.001)) + abs(u_mouse.x - 0.5);\n    pos.y += 0.2 * sin(floor(pos.x * min(u_time / 100.0, 80.0)) * cos(u_time * 0.001 + 0.4)) + abs(u_mouse.y - 0.5);\n    vec4 col = texture2D(u_image0, fract(pos));\n    vec4 cam = texture2D(colorBuffer, fract(1.0 - pos));\n    gl_FragColor = 2.0 * (cam - col);\n    gl_FragColor.a = 1.0;\n  } else if(stage == 6) {\n    vec2 center = (screenPosition - 0.5) * 2.0;\n    float e = b_x_ellipse(center, 0.9, 0.00);\n    float mag = 0.3 + e * u_mouse.x * 10.0;\n    vec2 s = vec2(screenPosition.y * mag + (1.0 - mag) / 2.0, 0.6 + abs(screenPosition.x - 0.5));\n    vec4 cam = texture2D(colorBuffer, s);\n    float a = c_x_asciiFilter(cam.rgb, screenPosition, (1.0 + e * 0.2) / 100.0);\n    gl_FragColor.rgb = mix(cam.rgb, vec3(1.0 - a), smoothstep(-1.08, -0.8, e));\n    gl_FragColor.a = 1.0;\n  } else {\n    vec2 center = (screenPosition - 0.5) * 2.0;\n    float e = b_x_ellipse(center, 0.9, 0.00);\n    float mag = 0.4 + e * abs(u_mouse.x - 0.5);\n    vec2 s = vec2(screenPosition.y * mag + (1.0 - mag) / 2.0, 0.6 + abs(screenPosition.x - 0.5));\n    vec4 cam = texture2D(colorBuffer, s);\n    float a = c_x_asciiFilter(cam.rgb, screenPosition, (1.0 + e * 0.2) / 100.0);\n    gl_FragColor.rgb = mix(cam.rgb, vec3(1.0 - a), smoothstep(-0.08, 0.08, e));\n    gl_FragColor.a = 1.0;\n  }\n  \n  \n  \n  \n}", [{"name":"colorBuffer","type":"sampler2D"},{"name":"u_image0","type":"sampler2D"},{"name":"u_mouse","type":"vec2"},{"name":"glitchCount","type":"float"},{"name":"u_time","type":"float"},{"name":"stage","type":"int"}], [{"name":"position","type":"vec2"}]);
 
 var app = require("./scene")({
     shader: createShader
@@ -327,6 +327,14 @@ require("domready")(function() {
         raf(tick);
         app.render(mouse);
 
+        if (currStep == 3 || currStep == 7) {
+            mouseCount++;
+
+            if (mouseCount > stepAmounts[currStep]) {
+                nextStep();
+            }
+        }
+
         if (follow != null) {
             follow.render(mouse);
         }
@@ -335,7 +343,6 @@ require("domready")(function() {
     window.onmousemove = function(e) {
         mouse = [e.pageX, e.pageY];
         mouseCount++;
-        console.log(currStep);
 
         if (mouseCount > stepAmounts[currStep]) {
             nextStep();
@@ -343,18 +350,21 @@ require("domready")(function() {
     };
 
     function nextStep() {
-        console.log("CLIKC");
         mouseCount = 0;
         currStep++;
 
         if (currStep == 1) {
+            app.setStep(currStep);
             follow = new Follow(destroyFollow, stepAmounts);
         } else if (currStep == 2) {
             follow.startPhysics();
+            app.setStep(currStep);
         } else if (currStep == 3) {
             follow.startWindowShrink();
+            app.setStep(currStep);
         } else if (currStep == 4) {
             follow.startMagnetWindow();
+            app.setStep(currStep);
         } else if (currStep == 5) {
             follow.destroyObject();
         } else if (currStep == 6) {

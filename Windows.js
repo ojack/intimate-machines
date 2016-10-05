@@ -1,7 +1,7 @@
 
 var Windows = function() {
     this.browser = new Image();
-    this.browser.src = './images/chrome.png';
+    this.browser.src = './images/chrome-shadow.png';
 
     this.canvas = document.createElement('canvas');
    this.canvas.width = window.innerWidth;

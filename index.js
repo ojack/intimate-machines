@@ -11,10 +11,11 @@ var currStep = 0;
 3: shrinking window
 4: moving window
 5: glitch
-6: vag
+6: ascii
+7: vag
 */
 //var stepAmounts = [50, 50, 50, 50, 50, 50, 50];
-var stepAmounts = [300, 500, 400, 500, 600, 400, 600];
+var stepAmounts = [300, 400, 400, 300, 600, 2000, 600, 500];
  var mouseCount = 0;
 //get a shader
 var glslify = require('glslify')
@@ -47,6 +48,12 @@ require('domready')(function() {
   		// Animation logic 
   		raf(tick);
   		app.render(mouse);
+      if(currStep==3 || currStep==7){
+        mouseCount++;
+         if(mouseCount > stepAmounts[currStep]){
+          nextStep();
+        }
+      }
       if(follow!=null){
         follow.render(mouse);
       }
@@ -55,7 +62,7 @@ require('domready')(function() {
     window.onmousemove = function(e){
       mouse = [e.pageX, e.pageY];
       mouseCount++;
-      console.log(currStep);
+    //  console.log(currStep);
      if(mouseCount > stepAmounts[currStep]){
       nextStep();
      }
@@ -63,21 +70,27 @@ require('domready')(function() {
     }
 
     function nextStep(){
-       console.log("CLIKC");
+      // console.log("CLIKC");
        mouseCount = 0;
       currStep++;
       if(currStep==1){
+         app.setStep(currStep);
         follow = new Follow(destroyFollow, stepAmounts);
       } else if(currStep==2){
         follow.startPhysics();
+         app.setStep(currStep);
       } else if(currStep==3){
         follow.startWindowShrink();
+         app.setStep(currStep);
       } else if(currStep==4){
         follow.startMagnetWindow();
+         app.setStep(currStep);
       } else if(currStep==5){
         follow.destroyObject();
       } else if(currStep==6){
         app.setStep(currStep);
+     // } else if(currStep==7){
+      //  app.setStep(currStep);
       } else {
         currStep = 0;
          app.setStep(currStep);
