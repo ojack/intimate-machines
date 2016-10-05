@@ -15,6 +15,7 @@
     "domready": "^1.0.7",
     "gl-shader": "^4.2.1",
     "gl-texture2d": "^2.0.8",
+    "glsl-ascii-filter": "^1.0.1",
     "glsl-luma": "^1.0.1",
     "raf": "^3.3.0",
     "webgl-context": "^2.1.1",

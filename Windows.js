@@ -10,8 +10,8 @@ var Windows = function() {
     this.canvas.style.position = "fixed";
     this.canvas.style.top = '0px';
     this.canvas.style.left = '0px';
-   this.ctx.globalAlpha = 0.4;
-    //this.ctx.globalCompositeOperation = "difference";
+   this.ctx.globalAlpha = 1.0;
+    this.ctx.globalCompositeOperation = "difference";
    // this.ctx.globalCompositeOperation = "exclusion";
     document.body.appendChild(this.canvas);
 
@@ -30,12 +30,14 @@ Windows.prototype.resize = function(){
 Windows.prototype.getCoords = function(dir, off){
    var w = window.innerWidth - off;
   var h = w * window.innerHeight/window.innerWidth;
-  var x = (window.innerWidth - w)/2 + dir[0]*50;
-  var y = (window.innerHeight - h)/2 + dir[1]*50;
+  var x =  dir[0]-w/2;
+  var y = dir[1]-h/2;
   return ([x, y, w, h]);
 }
-Windows.prototype.render = function(dir, offset){
- // this.ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+Windows.prototype.render = function(dir, offset, erase){
+  if(erase){
+    this.ctx.clearRect(0, 0, window.innerWidth, window.innerHeight)
+  }
  // this.ctx.save();
  
  var o;

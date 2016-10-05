@@ -33,10 +33,10 @@ var bodies = [];
 for(var i = 0; i < coords.length; i+=3){
   bodies.push(Bodies.rectangle(coords[i][0], coords[i][1], 20, 20, {restitution: 0.9, angle: -Math.PI * 0.15 }));
 }
- this.floor = Bodies.rectangle(window.innerWidth/2, window.innerHeight-10, window.innerWidth, 60, { isStatic: true });
-this.ceiling = Bodies.rectangle(window.innerWidth/2, 10, window.innerWidth, 10, { isStatic: true });
-this.leftWall = Bodies.rectangle(30, window.innerHeight/2, 10, window.innerHeight, { isStatic: true });
-this.rightWall = Bodies.rectangle(window.innerWidth-10, window.innerHeight/2, 10, window.innerHeight, { isStatic: true });
+ this.floor = Bodies.rectangle(window.innerWidth/2, window.innerHeight+100, window.innerWidth, 200, { isStatic: true });
+this.ceiling = Bodies.rectangle(window.innerWidth/2, -100, window.innerWidth, 200, { isStatic: true });
+this.leftWall = Bodies.rectangle(-100, window.innerHeight/2, 200, window.innerHeight, { isStatic: true });
+this.rightWall = Bodies.rectangle(window.innerWidth+100, window.innerHeight/2, 200, window.innerHeight, { isStatic: true });
 
         // var compound = Body.create({
         //     parts: [ceiling, rightWall, floor, leftWall]
@@ -69,10 +69,10 @@ Physics.prototype.render = function(dir, c){
     this.engine.world.gravity.y = -dir[1];
     this.engine.world.gravity.x = -dir[0];
 
-    Body.setPosition(this.floor, { x: c[0]+c[2]/2, y: c[1]+c[3]});
-    Body.setPosition(this.ceiling, { x: c[0]+c[2]/2, y: c[1]});
-    Body.setPosition(this.leftWall, { x: c[0], y: c[1]+c[3]/2});
-    Body.setPosition(this.rightWall, { x: c[0]+c[2], y: c[1]+c[3]/2});
+    Body.setPosition(this.floor, { x: c[0]+c[2]/2, y: c[1]+c[3]+100});
+    Body.setPosition(this.ceiling, { x: c[0]+c[2]/2, y: c[1]-100});
+    Body.setPosition(this.leftWall, { x: c[0]-100, y: c[1]+c[3]/2});
+    Body.setPosition(this.rightWall, { x: c[0]+c[2]+100, y: c[1]+c[3]/2});
     Engine.update(this.engine, 1000 / 60);
     
     this.bodies = Composite.allBodies(this.engine.world);
