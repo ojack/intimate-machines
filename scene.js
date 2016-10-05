@@ -54,13 +54,19 @@ function create(opt) {
         setGlitchTexture: setGlitchTexture,
         tex2: tex2,
         count: count, 
-        stage: stage
+        stage: stage,
+        setStep: setStep
     }
 
     function setGlitchTexture(canvas){
          tex2 = Texture(gl, canvas);
          count = 0;
          stage++;
+    }
+
+    function setStep(num){
+      stage= num;
+      count = 0;
     }
 
     function resize(){
@@ -99,6 +105,10 @@ function create(opt) {
       }
       count++;
         triangle(gl)
+        if(stage==1&&count > 3000){
+          stage++;
+          count= 0;
+        }
     }
 }
 

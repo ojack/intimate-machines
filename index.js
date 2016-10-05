@@ -4,7 +4,17 @@ var Follow = require('./FollowMe.js');
 raf.polyfill();
 var follow;
 var currStep = 0;
-var stepAmounts = [100, 100, 100, 200, 200];
+/*
+0: mouse no trail
+1: trail
+2: physics
+3: shrinking window
+4: moving window
+5: glitch
+6: vag
+*/
+//var stepAmounts = [50, 50, 50, 50, 50, 50, 50];
+var stepAmounts = [300, 500, 400, 500, 600, 400, 600];
  var mouseCount = 0;
 //get a shader
 var glslify = require('glslify')
@@ -45,20 +55,37 @@ require('domready')(function() {
     window.onmousemove = function(e){
       mouse = [e.pageX, e.pageY];
       mouseCount++;
-     // console.log(mouseCount);
-      if(currStep==0){
-         if(mouseCount > stepAmounts[0]) {
-           currStep++;
-          follow = new Follow(destroyFollow, stepAmounts);
-        }
-      } else if(currStep==1){
-        if(mouseCount >= stepAmounts[0]+stepAmounts[1]+stepAmounts[2]){
-          console.log("shrink!!");
-          follow.startWindowShrink();
-          currStep++;
-         }
-      }
+      console.log(currStep);
+     if(mouseCount > stepAmounts[currStep]){
+      nextStep();
+     }
       
+    }
+
+    function nextStep(){
+       console.log("CLIKC");
+       mouseCount = 0;
+      currStep++;
+      if(currStep==1){
+        follow = new Follow(destroyFollow, stepAmounts);
+      } else if(currStep==2){
+        follow.startPhysics();
+      } else if(currStep==3){
+        follow.startWindowShrink();
+      } else if(currStep==4){
+        follow.startMagnetWindow();
+      } else if(currStep==5){
+        follow.destroyObject();
+      } else if(currStep==6){
+        app.setStep(currStep);
+      } else {
+        currStep = 0;
+         app.setStep(currStep);
+      }
+    }
+
+    window.onclick = function(){
+      nextStep();
     }
 
     window.onresize = function(e){
